@@ -1,0 +1,60 @@
+Using multiplier 0.7 for solid extrusion
+Value of 100 set for infill extrusion, nothing to do
+Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/cube_Calibration_cube.bfb
+Using multiplier 0.7 for solid extrusion
+Value of 100 set for infill extrusion, nothing to do
+Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/cube_Calibration_cube.bfb
+2016-03-17 21:30:54,693 - CubePostProcessor - INFO - Using multiplier 0.7 for solid extrusion
+2016-03-17 21:30:54,737 - CubePostProcessor - INFO - Value of 100 set for infill extrusion, nothing to do
+2016-03-17 21:30:54,794 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/cube_Calibration_cube.bfb
+2016-03-17 22:09:34,363 - CubePostProcessor - INFO - Using multiplier 0.7 for solid extrusion
+2016-03-17 22:09:34,411 - CubePostProcessor - INFO - Value of 100 set for infill extrusion, nothing to do
+2016-03-17 22:10:36,523 - CubePostProcessor - INFO - Using multiplier 0.7 for solid extrusion
+2016-03-17 22:10:36,570 - CubePostProcessor - INFO - Value of 100 set for infill extrusion, nothing to do
+2016-03-17 22:10:36,622 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/Calibration_cube_cb.bfb
+2016-03-17 22:19:08,691 - CubePostProcessor - INFO - Using multiplier 0.65 for solid extrusion
+2016-03-17 22:19:08,738 - CubePostProcessor - INFO - Using multiplier 0.7 for infill extrusion
+2016-03-17 22:19:08,835 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/Calibration_cube_cb.bfb
+2016-03-18 18:40:58,533 - CubePostProcessor - INFO - Using multiplier 0.55 for solid extrusion
+2016-03-18 18:40:58,575 - CubePostProcessor - INFO - Using multiplier 0.6 for infill extrusion
+2016-03-18 18:40:58,668 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/Calibration_cube_cb.bfb
+2016-03-20 13:08:53,734 - CubePostProcessor - ERROR - No supported gcode file detected. Is comments enabled on Kisslicer or '; CURA' header added to Cura start.gcode?
+2016-03-20 13:09:05,111 - CubePostProcessor - ERROR - No supported gcode file detected. Is comments enabled on Kisslicer or '; CURA' header added to Cura start.gcode?
+2016-03-20 13:11:18,490 - CubePostProcessor - INFO - Using multiplier 0.0 for solid extrusion
+2016-03-20 13:11:33,718 - CubePostProcessor - INFO - Using multiplier 0.0 for solid extrusion
+2016-03-20 13:12:02,618 - CubePostProcessor - INFO - Using multiplier 0.0 for solid extrusion
+2016-03-20 13:12:22,157 - CubePostProcessor - INFO - Using multiplier 0.0 for solid extrusion
+2016-03-20 13:12:46,275 - CubePostProcessor - INFO - Using multiplier 0.0 for solid extrusion
+2016-03-20 13:12:46,320 - CubePostProcessor - INFO - Using multiplier 0.15 for infill extrusion
+2016-03-20 13:13:03,018 - CubePostProcessor - INFO - Using multiplier 0.0 for solid extrusion
+2016-03-20 13:13:03,063 - CubePostProcessor - INFO - Using multiplier 0.15 for infill extrusion
+2016-03-20 13:13:03,152 - CubePostProcessor - ERROR - Could not save file, error: sequence item 0: expected str instance, bytes found
+2016-03-20 13:13:44,936 - CubePostProcessor - INFO - Using multiplier 1.0 for solid extrusion
+2016-03-20 13:13:44,993 - CubePostProcessor - INFO - Using multiplier 1.0 for infill extrusion
+2016-03-20 13:13:45,093 - CubePostProcessor - ERROR - Could not save file, error: sequence item 0: expected str instance, bytes found
+2016-03-20 13:14:51,405 - CubePostProcessor - INFO - Using multiplier 1.0 for solid extrusion
+2016-03-20 13:14:51,458 - CubePostProcessor - INFO - Using multiplier 1.0 for infill extrusion
+2016-03-20 13:14:51,558 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/Calibration_cube_cb.bfb
+2016-03-20 13:17:41,039 - CubePostProcessor - ERROR - No supported gcode file detected. Is comments enabled on Kisslicer or '; CURA' header added to Cura start.gcode?
+2016-03-20 13:20:10,603 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/Shell_1mm_cb.bfb
+2016-03-20 13:20:30,474 - CubePostProcessor - INFO - Removed auto rectraction command
+2016-03-20 13:20:30,476 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/Shell_1mm_cb.bfb
+2016-03-20 13:21:55,683 - CubePostProcessor - INFO - Removed auto rectraction command
+2016-03-20 13:21:55,686 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/Shell_1mm_cb.bfb
+2016-03-20 14:17:53,608 - CubePostProcessor - INFO - Removed auto rectraction command
+2016-03-20 14:17:53,610 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/Shell_1mm_cb.bfb
+2016-03-20 14:40:02,488 - CubePostProcessor - INFO - Removed auto rectraction command
+2016-03-20 14:40:02,493 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/WallCalibration_cb.bfb
+2016-03-20 15:00:23,387 - CubePostProcessor - INFO - Removed auto rectraction command
+2016-03-20 15:00:23,391 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/WallCalibration_cb.bfb
+2016-03-20 15:17:04,316 - CubePostProcessor - INFO - Removed auto rectraction command
+2016-03-20 15:17:04,318 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/WallCalibration_cb.bfb
+2016-03-20 15:42:40,640 - CubePostProcessor - INFO - Removed auto rectraction command
+2016-03-20 15:42:40,643 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/WallCalibration_cb.bfb
+2016-03-20 16:05:08,536 - CubePostProcessor - ERROR - No supported gcode file detected. Is comments enabled on Kisslicer or '; CURA' header added to Cura start.gcode?
+2016-03-20 16:05:40,912 - CubePostProcessor - INFO - Removed auto rectraction command
+2016-03-20 16:05:40,936 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/Calibration_cube_cb.bfb
+2016-03-20 17:37:07,484 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/Calibration_cube_cb.bfb
+2016-03-20 17:44:36,486 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/Calibration_cube_cb.bfb
+2016-03-20 17:45:24,213 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Calibration_Cube/Calibration_cube_cb.bfb
+2016-03-20 18:19:38,550 - CubePostProcessor - INFO - Wrote new file: /mnt/hgfs/E/3DModels/Airtrippers_Bowden_Extruder_V3/airtripper-extruder-v3-all_cb.bfb
