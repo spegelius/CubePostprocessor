@@ -16,6 +16,9 @@ log.addHandler(streamhandler)
 
 class PrintFile:
     EXTRUSION_SPEED_CMD = b"M108"
+    EXTRUDER_TEMP_CMD = b"M104"
+    EXTRUDER_ON_CMD = b"M101"
+    EXTRUDER_OFF_CMD = b"M103"
 
     def __init__(self, debug=False):
         self.debug = debug
@@ -191,7 +194,7 @@ class KissPrintFile(PrintFile):
 
 class CuraPrintFile(PrintFile):
 
-    LAYER_START_RE = re.compile(';LAYER:')
+    LAYER_START_RE = re.compile(b';LAYER:')
 
     def __init__(self, debug=False):
         super().__init__(debug=debug)
@@ -199,6 +202,7 @@ class CuraPrintFile(PrintFile):
     def process(self, gcode_file):
         self.open_file(gcode_file)
         #self.patch_auto_retraction()
+        self.patch_first_layer_temp()
         self.save_new_file()
 
     def patch_auto_retraction(self):
@@ -216,7 +220,7 @@ class CuraPrintFile(PrintFile):
                 return
             index += 1
 
-    def patch_first_layer(self):
+    def patch_first_layer_width(self):
         # NOT NEEDED. Cura has first layer width parameter :)
         first_layer = False
         index = 0
@@ -236,7 +240,40 @@ class CuraPrintFile(PrintFile):
                 self.lines[index] = new_speed
             index += 1
 
-
+    def patch_first_layer_temp(self):
+        # set temp for first layer, +10 for the setting at the beginning of the file
+        layer_nr = 0
+        temp_value = None
+        temp_index = None
+        index = 0
+        while True:
+            try:
+                l = self.lines[index]
+            except IndexError:
+                break
+            if self.LAYER_START_RE.match(l):
+                layer_nr += 1
+                if layer_nr == 1:
+                    # layer starts. patch temp setting
+                    layer_nr = 1
+                    if temp_value:
+                        new_value = ("%s" % (temp_value + 10)).encode()
+                        self.lines[temp_index] = b"%s S%s" % (self.EXTRUDER_TEMP_CMD, new_value)
+                        log.info("Patch first layer temp with line: %s" % self.lines[temp_index].decode())
+            elif l.startswith(self.EXTRUDER_TEMP_CMD):
+                # store temp value and line
+                temp_value = int(l.split(b" ")[1].strip()[1:])
+                if temp_value >= 280:
+                    # 280 is the max
+                    return
+                temp_index = index
+            elif layer_nr > 1 and l == self.EXTRUDER_OFF_CMD:
+                if temp_value:
+                    new_value = ("%s" % (temp_value)).encode()
+                    self.lines.insert(index + 1, b"%s S%s" % (self.EXTRUDER_TEMP_CMD, new_value))
+                    log.info("Add original temp line after first layer; %s" % self.lines[index].decode())
+                return
+            index += 1
 
 
 def detect_file_type(gcode_file):
