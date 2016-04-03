@@ -1,3 +1,26 @@
+#!/usr/bin/env python
+
+"""
+# CubePostprocessor
+
+Just a post processor make life easier with Cube 2 from 3DSystems.
+
+Support KISSlicer 1.5b, Cura 15.04.04 and Slic3r 1.2.9.
+
+With all slicer g-code, it cleans the file after processing (removes comments and extra lines, makes sure EOL is Windows)
+
+With KISS
+ - allows for solid and infill extrusion amount tuning
+
+With Cura
+ - change first layer temp 10 C higher than rest of the print
+
+With Slicer
+ - converts Makerware (Makerbot) style g-code to Cube (BfB) format
+
+Disclaimer: i'm not responsible if anything, good or bad, happens due to use of this script.
+"""
+
 
 import logging
 import re
@@ -10,6 +33,7 @@ filehandler.setFormatter(fmt)
 streamhandler = logging.StreamHandler(stream=sys.stdout)
 streamhandler.setFormatter(fmt)
 log = logging.getLogger("CubePostProcessor")
+log.setLevel(logging.INFO)
 log.addHandler(filehandler)
 log.addHandler(streamhandler)
 
@@ -77,10 +101,19 @@ class PrintFile:
         new_val = b"M108 S%.1f" % (float(current_speed) * multiplier)
         return new_val
 
+    def read_line(self, index):
+        if self.lines[index].startswith(b";"):
+            return self.lines[index], None
+        vals = self.lines[index].strip().split(b";", 1)
+        l = vals[0].strip()
+        if len(vals) == 2:
+            return l, vals[1]
+        return l, None
 
 class Slic3rPrintFile(PrintFile):
 
-    EXTRUDER_SPEED_RE = re.compile(b"^G1 E([-]*\d+\.\d+) F(\d+\.\d+)$")
+    EXTRUDER_RETRACT_RE = re.compile(b"^G1 E([-]*\d+\.\d+) F(\d+\.\d+)$")
+    EXTRUDER_WIPE_RETRACT_RE = re.compile(b"^G1 E([-]*\d+\.\d+) F(\d+\.\d+)$")
     Z_MOVE_RE = re.compile(b"^G1 Z([-]*\d+\.\d+) F(\d+\.\d+)$")
     MOVE_RE = re.compile(b"^G1 X([-]*\d+\.\d+) Y([-]*\d+\.\d+) E(\d+\.\d+)$")
     MOVE_HEAD_RE = re.compile(b"^G1 X([-]*\d+\.\d+) Y([-]*\d+\.\d+) F(\d+\.\d+)$")
@@ -101,47 +134,63 @@ class Slic3rPrintFile(PrintFile):
         index = 0
         while index < len(self.lines):
             # remove first line that Slic3r adds. We have no valve?
-            if self.lines[index] == b"M127":
+            if self.lines[index].startswith(b"M127"):
                 self.lines.pop(index)
                 break
             index += 1
 
     def patch_extrusion(self):
+
         index = 0
         read_feed_rate = False
         prev_feed_rate = 0.0
-        last_feed_index = 0
         extruder_on_index = 0
 
         while True:
             try:
-                l = self.lines[index]
+                l, comment = self.read_line(index)
             except IndexError:
                 break
             cmds = l.split()
             if cmds[0] == self.EXTRUDER_ON_CMD:
+                # set falg to read feed rate
                 read_feed_rate = True
                 extruder_on_index = index
-            elif cmds[0] == self.EXTRUDER_OFF_CMD and last_feed_index:
-                self.lines.pop(last_feed_index)
-                last_feed_index = 0
-                index -+ 1
+            elif cmds[0] == self.EXTRUDER_OFF_CMD:
+                # remove extra extruder off lines
+                if not extruder_on_index:
+                    self.lines.pop(index)
+                    index -+ 1
+                extruder_on_index = 0
             elif self.MOVE_SPEED_RE.match(l):
                 if read_feed_rate:
+                    # read feed rate and calculate proper value for extrusion
                     values = self.MOVE_SPEED_RE.match(l)
                     feed_rate = float(values.groups()[-1])
                     if feed_rate != prev_feed_rate:
+                        # add feed rate cmd if value has changed
                         prev_feed_rate = feed_rate
                         flow_rate = feed_rate * 0.015
                         self.lines.insert(extruder_on_index, b"M108 S%.1f" % float(flow_rate))
                         index += 1
-                else:
-                    last_feed_index = index
             elif self.SPEED_RE.match(l):
-                self.lines[index] = self.EXTRUDER_OFF_CMD
-            elif self.EXTRUDER_SPEED_RE.match(l):
+                # speed setting, not needed
+                if extruder_on_index:
+                    self.lines[index] = self.EXTRUDER_OFF_CMD
+                    extruder_on_index = 0
+                else:
+                    self.lines.pop(index)
+                    index -= 1
+            elif self.EXTRUDER_RETRACT_RE.match(l) or self.EXTRUDER_WIPE_RETRACT_RE.match(l):
+                # extruder wipe/extract, not needed
                 self.lines.pop(index)
                 index -+ 1
+            elif self.MOVE_HEAD_RE.match(l):
+                # if head is moving without extrusion, turn extruder off
+                if extruder_on_index:
+                    self.lines.insert(index, self.EXTRUDER_OFF_CMD)
+                    index += 1
+                    extruder_on_index = 0
             index += 1
 
     def patch_moves(self):
@@ -150,7 +199,7 @@ class Slic3rPrintFile(PrintFile):
         current_z = 0
         while True:
             try:
-                l = self.lines[index]
+                l, comment = self.read_line(index)
             except IndexError:
                 break
             if self.Z_MOVE_RE.match(l):
@@ -170,6 +219,9 @@ class Slic3rPrintFile(PrintFile):
                 self.lines[index] = b"G1 X%s Y%s Z%s F%s" % (values[0], values[1], current_z, values[2])
             index += 1
 
+    def format_string_to_float(self, value):
+        val = float(value)
+        return b"%.2f" % val
 
 class KissPrintFile(PrintFile):
 
