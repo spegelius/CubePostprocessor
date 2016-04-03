@@ -19,12 +19,16 @@ With Slicer
  - converts Makerware (Makerbot) style g-code to Cube (BfB) format
 
 Disclaimer: i'm not responsible if anything, good or bad, happens due to use of this script.
+
+Version 0.5
 """
 
 
 import logging
+import math
 import re
 import os
+import statistics
 import sys
 
 fmt = logging.Formatter(fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -37,6 +41,11 @@ log.setLevel(logging.INFO)
 log.addHandler(filehandler)
 log.addHandler(streamhandler)
 
+
+## Globals
+
+# Tune this to make Slic3r filament flow fir your needs
+SLIC3R_FLOW_MULTIPLIER = 0.0006
 
 class PrintFile:
     EXTRUSION_SPEED_CMD = b"M108"
@@ -53,6 +62,7 @@ class PrintFile:
         self.settings = {}
         self.lines = []
         self.gcode_file = None
+        self.line_index = 0
 
     def remove_comments(self):
 
@@ -110,18 +120,39 @@ class PrintFile:
             return l, vals[1]
         return l, None
 
+    def calculate_path_length(self, prev_position, new_position):
+
+        x_len = prev_position[0] - new_position[0]
+        y_len = prev_position[1] - new_position[1]
+
+        path_len = math.sqrt((x_len * x_len) + (y_len * y_len))
+        return path_len
+
+    def calculate_extrusion_length(self, prev_position, new_position):
+        length = abs(prev_position - new_position)
+        return length
+
+    def calculate_feed_rate(self, path_len, extrusion_length):
+        rate = path_len / extrusion_length
+        return rate
+
+    def delete_line(self, index):
+        self.lines.pop(index)
+        self.line_index -= 1
+
+
 class Slic3rPrintFile(PrintFile):
 
     EXTRUDER_RETRACT_RE = re.compile(b"^G1 E([-]*\d+\.\d+) F(\d+\.\d+)$")
-    EXTRUDER_WIPE_RETRACT_RE = re.compile(b"^G1 E([-]*\d+\.\d+) F(\d+\.\d+)$")
     Z_MOVE_RE = re.compile(b"^G1 Z([-]*\d+\.\d+) F(\d+\.\d+)$")
-    MOVE_RE = re.compile(b"^G1 X([-]*\d+\.\d+) Y([-]*\d+\.\d+) E(\d+\.\d+)$")
+    EXTRUSION_MOVE_RE = re.compile(b"^G1 X([-]*\d+\.\d+) Y([-]*\d+\.\d+) E(\d+\.\d+)")
+    EXTRUSION_MOVE_SPEED_RE = re.compile(b"^G1 X([-]*\d+\.\d+) Y([-]*\d+\.\d+) E(\d+\.\d+) F(\d+\.\d+)$")
     MOVE_HEAD_RE = re.compile(b"^G1 X([-]*\d+\.\d+) Y([-]*\d+\.\d+) F(\d+\.\d+)$")
-    MOVE_SPEED_RE = re.compile(b"^G1 X([-]*\d+\.\d+) Y([-]*\d+\.\d+) E(\d+\.\d+) F(\d+\.\d+)$")
     SPEED_RE = re.compile(b"^G1 F(\d+)$")
 
     def __init__(self, debug=False):
         super().__init__(debug=debug)
+        self.feed_rates = []
 
     def process(self, gcode_file):
         self.open_file(gcode_file)
@@ -139,89 +170,113 @@ class Slic3rPrintFile(PrintFile):
                 break
             index += 1
 
-    def patch_extrusion(self):
+    def add_extrusion_speed_line(self, extruder_on_index):
+        # calculate mean and use it to set feed rate
+        feed_rate = statistics.mean([rate for rate, speed in self.feed_rates])
+        flow_rate = feed_rate * self.feed_rates[0][1] * SLIC3R_FLOW_MULTIPLIER
+        self.lines.insert(extruder_on_index, b"M108 S%.1f" % float(flow_rate))
+        #print(flow_rate, self.feed_rates[0][1])
+        self.line_index += 1
+        self.feed_rates = []
 
-        index = 0
-        read_feed_rate = False
-        prev_feed_rate = 0.0
+    def patch_extrusion(self):
+        self.line_index = 0
+        prev_position = (0.0, 0.0)
         extruder_on_index = 0
+        prev_filament_pos = 0
+        current_speed = 0
 
         while True:
             try:
-                l, comment = self.read_line(index)
+                l, comment = self.read_line(self.line_index)
             except IndexError:
                 break
             cmds = l.split()
+
             if cmds[0] == self.EXTRUDER_ON_CMD:
-                # set falg to read feed rate
-                read_feed_rate = True
-                extruder_on_index = index
+                if self.feed_rates and extruder_on_index:
+                    self.add_extrusion_speed_line(extruder_on_index)
+                extruder_on_index = self.line_index
+
             elif cmds[0] == self.EXTRUDER_OFF_CMD:
                 # remove extra extruder off lines
                 if not extruder_on_index:
-                    self.lines.pop(index)
-                    index -+ 1
-                extruder_on_index = 0
-            elif self.MOVE_SPEED_RE.match(l):
-                if read_feed_rate:
-                    # read feed rate and calculate proper value for extrusion
-                    values = self.MOVE_SPEED_RE.match(l)
-                    feed_rate = float(values.groups()[-1])
-                    if feed_rate != prev_feed_rate:
-                        # add feed rate cmd if value has changed
-                        prev_feed_rate = feed_rate
-                        flow_rate = feed_rate * 0.015
-                        self.lines.insert(extruder_on_index, b"M108 S%.1f" % float(flow_rate))
-                        index += 1
+                    self.delete_line(self.line_index)
+                else:
+                    self.add_extrusion_speed_line(extruder_on_index)
+                    extruder_on_index = 0
+            elif self.EXTRUSION_MOVE_RE.match(l):
+                # read feed rate and add it to feed rate list
+                if extruder_on_index:
+                    if cmds[-1].startswith(b"F"):
+                        values = self.EXTRUSION_MOVE_SPEED_RE.match(l).groups()
+                        current_speed = float(values[3])
+                    else:
+                        values = self.EXTRUSION_MOVE_RE.match(l).groups()
+                    position = (float(values[0]), float(values[1]))
+                    path_len = self.calculate_path_length(prev_position, position)
+                    filament_pos = float(values[2])
+                    extrusion_len = self.calculate_extrusion_length(prev_filament_pos, filament_pos)
+                    feed_rate = self.calculate_feed_rate(path_len, extrusion_len)
+                    self.feed_rates.append((feed_rate, current_speed))
+                    prev_position = position
+                    prev_filament_pos = filament_pos
             elif self.SPEED_RE.match(l):
                 # speed setting, not needed
                 if extruder_on_index:
-                    self.lines[index] = self.EXTRUDER_OFF_CMD
+                    self.add_extrusion_speed_line(extruder_on_index)
+                    self.lines[self.line_index] = self.EXTRUDER_OFF_CMD
                     extruder_on_index = 0
                 else:
-                    self.lines.pop(index)
-                    index -= 1
-            elif self.EXTRUDER_RETRACT_RE.match(l) or self.EXTRUDER_WIPE_RETRACT_RE.match(l):
-                # extruder wipe/extract, not needed
-                self.lines.pop(index)
-                index -+ 1
+                    self.delete_line(self.line_index)
+            elif self.EXTRUDER_RETRACT_RE.match(l):
+                # extruder extract, not needed
+                self.delete_line(self.line_index)
+                # get filament position
+                values = self.EXTRUDER_RETRACT_RE.match(l).groups()
+                prev_filament_pos = float(values[0])
             elif self.MOVE_HEAD_RE.match(l):
                 # if head is moving without extrusion, turn extruder off
                 if extruder_on_index:
-                    self.lines.insert(index, self.EXTRUDER_OFF_CMD)
-                    index += 1
+                    self.add_extrusion_speed_line(extruder_on_index)
+                    self.lines.insert(self.line_index, self.EXTRUDER_OFF_CMD)
+                    self.line_index += 1
                     extruder_on_index = 0
-            index += 1
+                values = self.MOVE_HEAD_RE.match(l).groups()
+                prev_position = (float(values[0]), float(values[1]))
+
+            self.line_index += 1
 
     def patch_moves(self):
-        index = 0
+        self.line_index = 0
         current_speed = 0
         current_z = 0
+
+        def get_move_gcode(x, y, z, speed):
+            return b"G1 X%.2f Y%.2f Z%.2f F%.2f" % (x, y, z, speed)
+
         while True:
             try:
-                l, comment = self.read_line(index)
+                l, comment = self.read_line(self.line_index)
             except IndexError:
                 break
+            cmds = l.split()
             if self.Z_MOVE_RE.match(l):
                 values = self.Z_MOVE_RE.match(l)
-                current_z = values.groups()[0]
-                self.lines.pop(index)
-                index -= 1
-            elif self.MOVE_RE.match(l):
-                values = self.MOVE_RE.match(l).groups()
-                self.lines[index] = b"G1 X%s Y%s Z%s F%s" % (values[0], values[1], current_z, current_speed)
-            elif self.MOVE_SPEED_RE.match(l):
-                values = self.MOVE_SPEED_RE.match(l).groups()
-                current_speed = values[3]
-                self.lines[index] = b"G1 X%s Y%s Z%s F%s" % (values[0], values[1], current_z, current_speed)
+                current_z = float(values.groups()[0])
+                self.delete_line(self.line_index)
+            elif self.EXTRUSION_MOVE_RE.match(l):
+                if cmds[-1].startswith(b"F"):
+                    values = self.EXTRUSION_MOVE_SPEED_RE.match(l).groups()
+                    current_speed = float(values[3])
+                else:
+                    values = self.EXTRUSION_MOVE_RE.match(l).groups()
+                self.lines[self.line_index] = get_move_gcode(float(values[0]), float(values[1]), current_z, current_speed)
             elif self.MOVE_HEAD_RE.match(l):
                 values = self.MOVE_HEAD_RE.match(l).groups()
-                self.lines[index] = b"G1 X%s Y%s Z%s F%s" % (values[0], values[1], current_z, values[2])
-            index += 1
+                self.lines[self.line_index] = get_move_gcode(float(values[0]), float(values[1]), current_z, float(values[2]))
+            self.line_index += 1
 
-    def format_string_to_float(self, value):
-        val = float(value)
-        return b"%.2f" % val
 
 class KissPrintFile(PrintFile):
 
