@@ -37,7 +37,7 @@ def calculate_extrusion_length(prev_position, new_position):
 
 
 def calculate_feed_rate(path_len, extrusion_length):
-    rate = path_len / extrusion_length
+    rate = 1 / (path_len / extrusion_length)
     return rate
 
 
@@ -89,4 +89,4 @@ print(feed_rate)
 import process
 
 pf = process.Slic3rPrintFile()
-pf.process('/mnt/hgfs/E/3DModels/Calibration_Cube/WallCalibration_s3.bfb')
+#pf.process('/mnt/hgfs/E/3DModels/Calibration_Cube/WallCalibration_s3.bfb')

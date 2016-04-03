@@ -45,7 +45,7 @@ log.addHandler(streamhandler)
 ## Globals
 
 # Tune this to make Slic3r filament flow fir your needs
-SLIC3R_FLOW_MULTIPLIER = 0.0006
+SLIC3R_FLOW_MULTIPLIER = 0.325
 
 class PrintFile:
     EXTRUSION_SPEED_CMD = b"M108"
@@ -133,7 +133,7 @@ class PrintFile:
         return length
 
     def calculate_feed_rate(self, path_len, extrusion_length):
-        rate = path_len / extrusion_length
+        rate = 1 / (path_len / extrusion_length)
         return rate
 
     def delete_line(self, index):
