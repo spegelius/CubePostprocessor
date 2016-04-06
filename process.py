@@ -45,7 +45,7 @@ log.addHandler(streamhandler)
 ## Globals
 
 # Tune this to make Slic3r filament flow fir your needs
-SLIC3R_FLOW_MULTIPLIER = 0.325
+SLIC3R_FLOW_MULTIPLIER = 0.365
 
 class PrintFile:
     EXTRUSION_SPEED_CMD = b"M108"
