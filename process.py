@@ -133,6 +133,8 @@ class PrintFile:
         return length
 
     def calculate_feed_rate(self, path_len, extrusion_length):
+        if not path_len or not extrusion_length:
+            return 0.005 # hat constant instead of 0 extrusion. Bug in Slic3r?
         rate = 1 / (path_len / extrusion_length)
         return rate
 
@@ -159,16 +161,34 @@ class Slic3rPrintFile(PrintFile):
         self.check_header()
         self.patch_extrusion()
         self.patch_moves()
+        self.patch_fan_on_off()
+        self.check_temp_change()
         self.save_new_file()
 
     def check_header(self):
-        index = 0
-        while index < len(self.lines):
-            # remove first line that Slic3r adds. We have no valve?
-            if self.lines[index].startswith(b"M127"):
-                self.lines.pop(index)
+        self.line_index = 0
+        while True:
+            try:
+                l, comment = self.read_line(self.line_index)
+                if l.startswith(b"M127"):
+                    self.delete_line(self.line_index)
+                    break
+            except IndexError:
                 break
-            index += 1
+            self.line_index += 1
+
+    def patch_fan_on_off(self):
+        self.line_index = 0
+        while True:
+            try:
+                l, comment = self.read_line(self.line_index)
+                if l.startswith(b"M127"):
+                    self.lines[self.line_index] = l.replace(b"M127", b"M107")
+                elif l.startswith(b"M126"):
+                    self.lines[self.line_index] = l.replace(b"M126", b"M106")
+            except IndexError:
+                break
+            self.line_index += 1
 
     def add_extrusion_speed_line(self, extruder_on_index):
         # calculate mean and use it to set feed rate
@@ -192,7 +212,6 @@ class Slic3rPrintFile(PrintFile):
             except IndexError:
                 break
             cmds = l.split()
-
             if cmds[0] == self.EXTRUDER_ON_CMD:
                 if self.feed_rates and extruder_on_index:
                     self.add_extrusion_speed_line(extruder_on_index)
@@ -275,6 +294,24 @@ class Slic3rPrintFile(PrintFile):
             elif self.MOVE_HEAD_RE.match(l):
                 values = self.MOVE_HEAD_RE.match(l).groups()
                 self.lines[self.line_index] = get_move_gcode(float(values[0]), float(values[1]), current_z, float(values[2]))
+            self.line_index += 1
+
+    def check_temp_change(self):
+        self.line_index = 0
+        extruder_on = False
+        while True:
+            try:
+                l, comment = self.read_line(self.line_index)
+            except IndexError:
+                break
+            cmds = l.split()
+            if cmds[0] == self.EXTRUDER_ON_CMD:
+                extruder_on = True
+            elif cmds[0] == self.EXTRUDER_OFF_CMD:
+                extruder_on = False
+            elif cmds[0] == self.EXTRUDER_TEMP_CMD and extruder_on:
+                self.lines.insert(self.line_index, self.EXTRUDER_OFF_CMD)
+                self.line_index += 1
             self.line_index += 1
 
 
