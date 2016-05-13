@@ -272,7 +272,7 @@ class Slic3rPrintFile(PrintFile):
         current_z = 0
 
         def get_move_gcode(x, y, z, speed):
-            return b"G1 X%.2f Y%.2f Z%.2f F%.2f" % (x, y, z, speed)
+            return b"G1 X%.3f Y%.3f Z%.3f F%.1f" % (x, y, z, speed)
 
         while True:
             try:
