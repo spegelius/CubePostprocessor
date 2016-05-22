@@ -2,11 +2,13 @@
 import logging
 import re
 
-from base import PrintFile
+from base import PrintFile, SLICER_KISSLICER
 
 log = logging.getLogger("Cubifier")
 
 class KissPrintFile(PrintFile):
+
+    slicer_type = SLICER_KISSLICER
 
     SOLID_SETTING_KEY = b'bed_C'
     INFILL_SETTING_KEY = b'destring_speed_mm_per_s'

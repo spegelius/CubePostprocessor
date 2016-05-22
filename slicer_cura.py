@@ -1,12 +1,13 @@
 import logging
 import re
 
-from base import PrintFile
+from base import PrintFile, SLICER_CURA
 
 log = logging.getLogger("Cubifier")
 
 class CuraPrintFile(PrintFile):
 
+    slicer_type = SLICER_CURA
     LAYER_START_RE = re.compile(b';LAYER:')
 
     def __init__(self, debug=False):
