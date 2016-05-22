@@ -6,9 +6,6 @@ from base import *
 
 log = logging.getLogger("Cubifier")
 
-# Tune this to make Slic3r filament flow for your needs
-SLIC3R_FLOW_MULTIPLIER = 0.365 # ok for MK8 drive gear
-
 class MakerBotFlavor(PrintFile):
 
     EXTRUDER_RETRACT_RE = re.compile(b"^G1 E([-]*\d+\.\d+) F(\d+\.*\d*)$")
@@ -62,7 +59,7 @@ class MakerBotFlavor(PrintFile):
     def add_extrusion_speed_line(self, extruder_on_index):
         # calculate mean and use it to set feed rate
         feed_rate = statistics.mean([rate for rate, speed in self.feed_rates])
-        flow_rate = feed_rate * self.feed_rates[0][1] * SLIC3R_FLOW_MULTIPLIER
+        flow_rate = feed_rate * self.feed_rates[0][1] * self.FLOW_MULTIPLIER
         self.lines.insert(extruder_on_index, b"M108 S%.1f" % float(flow_rate))
         #print(flow_rate, self.feed_rates[0][1])
         self.line_index += 1
