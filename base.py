@@ -69,7 +69,7 @@ class PrintFile:
         self.remove_comments()
         _dir, fname = os.path.split(self.gcode_file)
         name, ext = os.path.splitext(fname)
-        newfile = os.path.join(_dir,  name + "_cb" + ext)
+        newfile = os.path.join(_dir,  name + "_cb.bfb")
         try:
             with open(newfile, "wb") as nf:
                 result = b"\r\n".join(self.lines)
