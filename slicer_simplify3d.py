@@ -34,7 +34,6 @@ class Simplify3dPrintFile(MakerBotFlavor):
 
         header = False
         temp_line = None
-        replace_counter = 0
         while True:
             try:
                 l, comment = self.read_line()
@@ -45,11 +44,9 @@ class Simplify3dPrintFile(MakerBotFlavor):
                     if not header:
                         temp_line = l
                         self.delete_line()
-                    else:
+                    elif l.split()[1] == b"SFIRST_LAYER":
                         self.lines[self.line_index] = temp_line
-                        if replace_counter == 1:
-                            break
-                        replace_counter += 1
+                        break
                 elif not header:
                     self.delete_line(self.line_index)
             except IndexError:

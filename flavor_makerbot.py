@@ -16,6 +16,8 @@ class MakerBotFlavor(PrintFile):
     SPEED_RE = re.compile(b"^G1 F(\d+\.*\d*)$")
     EXTRUDER_POSITION_RE = re.compile(b"^G92 E0$")
 
+    FLOW_MULTIPLIER = 1 # change this in inheriting classes
+
     def __init__(self, debug=False):
         super().__init__(debug=debug)
         self.feed_rates = []
@@ -72,6 +74,9 @@ class MakerBotFlavor(PrintFile):
         prev_filament_pos = 0
         current_speed = 0
 
+        # for preserving the first extruder off cmd
+        ext_off_line_count = 0
+
         simplify3d_extruder_position_index = -1
 
         while True:
@@ -88,11 +93,11 @@ class MakerBotFlavor(PrintFile):
 
             elif cmds[0] == self.EXTRUDER_OFF_CMD:
                 # remove extra extruder off lines
-                if not extruder_on_index:
-                    self.delete_line(self.line_index)
-                else:
+                if extruder_on_index:
                     self.add_extrusion_speed_line(extruder_on_index)
                     extruder_on_index = 0
+                elif ext_off_line_count:
+                    self.delete_line()
 
             elif self.slicer_type == SLICER_SIMPLIFY3D and self.EXTRUDER_POSITION_RE.match(l):
                 # extruder position reset. Simplify3d format
@@ -128,6 +133,7 @@ class MakerBotFlavor(PrintFile):
                 if extruder_on_index:
                     self.add_extrusion_speed_line(extruder_on_index)
                     self.lines[self.line_index] = self.EXTRUDER_OFF_CMD
+                    ext_off_line_count += 1
                     extruder_on_index = 0
                 else:
                     self.delete_line(self.line_index)
@@ -142,6 +148,7 @@ class MakerBotFlavor(PrintFile):
                 if extruder_on_index:
                     self.add_extrusion_speed_line(extruder_on_index)
                     self.lines.insert(self.line_index, self.EXTRUDER_OFF_CMD)
+                    ext_off_line_count += 1
                     self.line_index += 1
                     extruder_on_index = 0
                 values = self.MOVE_HEAD_RE.match(l).groups()
