@@ -86,7 +86,13 @@ print(feed_rate)
 #G1 X-38.172 Y28.247 E2.78453 ; skirt
 #G1 X-39.036 Y25.000 E3.02236 ; skirt
 
-import process
+import cubifier
 
-pf = process.Slic3rPrintFile()
+pf = cubifier.Slic3rPrintFile()
 #pf.process('/mnt/hgfs/E/3DModels/Calibration_Cube/WallCalibration_s3.bfb')
+
+test = b"M127"
+test2 = b"M127 JEE"
+
+print(test.replace(b"M127", b"M107"))
+print(test2.replace(b"M127", b"M107"))

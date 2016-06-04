@@ -29,7 +29,7 @@ class MakerBotFlavor(PrintFile):
         self.patch_moves()
         self.patch_fan_on_off()
         self.check_temp_change()
-        self.save_new_file()
+        return self.save_new_file()
 
     def check_header(self):
         # Remove lines before Cube header

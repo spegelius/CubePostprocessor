@@ -120,4 +120,4 @@ class KissPrintFile(PrintFile):
         self.read_initial_settings()
         self.patch_solid_extrusion()
         self.patch_infill_extrusion()
-        self.save_new_file()
+        return self.save_new_file()

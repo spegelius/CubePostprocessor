@@ -75,6 +75,7 @@ class PrintFile:
                 result = b"\r\n".join(self.lines)
                 nf.write(result)
                 log.info("Wrote new file: %s" % newfile)
+                return newfile
         except Exception as e:
             log.error("Could not save file, error: %s" % e)
             return 1

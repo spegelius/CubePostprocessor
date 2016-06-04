@@ -25,16 +25,16 @@ Version 0.7
 
 
 import logging
-import math
-import re
 import os
-import statistics
+import subprocess
 import sys
 
 from slicer_cura import CuraPrintFile
 from slicer_kisslicer import KissPrintFile
 from slicer_simplify3d import Simplify3dPrintFile
 from slicer_slic3r import Slic3rPrintFile
+
+import utils
 
 fmt = logging.Formatter(fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 filehandler = logging.FileHandler("process.log")
@@ -66,6 +66,29 @@ def detect_file_type(gcode_file):
             log.error("No supported gcode file detected. Is comments enabled on Kisslicer or '; CURA' header added to Cura start.gcode?")
             exit(1)
 
+
+def run_codex(result_file):
+
+    if utils.is_windows():
+        cur_path = os.path.dirname(os.path.realpath(__file__))
+        print(cur_path)
+        codex_path = os.path.join(cur_path, "CodeX", "CodeX64.exe")
+        if not os.path.exists(codex_path):
+            log.info("Hint: put CodeX to CodeX folder to Cubifier dir, Cubifier calls CodeX automatically")
+            return
+
+        log.info("Found CodeX, encoding file. This might take a while...")
+        _dir, fname = os.path.split(result_file)
+        name, ext = os.path.splitext(fname)
+        cube_file = os.path.join(_dir,  name + ".cube")
+        args = [codex_path,
+                "CubePro",
+                "EnCode",
+                result_file,
+                cube_file]
+        subprocess.call(args)
+
+
 if __name__ == "__main__":
     debug = False
     if len(sys.argv) < 2:
@@ -76,4 +99,5 @@ if __name__ == "__main__":
 
     print_type = detect_file_type(sys.argv[1])
     pf = print_type(debug=debug)
-    pf.process(sys.argv[1])
+    result_file = pf.process(sys.argv[1])
+    run_codex(result_file)

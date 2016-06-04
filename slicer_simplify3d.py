@@ -25,7 +25,7 @@ class Simplify3dPrintFile(MakerBotFlavor):
         self.patch_fan_on_off()
         self.check_temp_change()
         self.remove_unused_cmds()
-        self.save_new_file()
+        return self.save_new_file()
 
 
     def check_header(self):

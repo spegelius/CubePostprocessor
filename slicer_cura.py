@@ -17,7 +17,7 @@ class CuraPrintFile(PrintFile):
         self.open_file(gcode_file)
         #self.patch_auto_retraction()
         self.patch_first_layer_temp()
-        self.save_new_file()
+        return self.save_new_file()
 
     def patch_auto_retraction(self):
         # remove retraction setting. Cube uses it's own setting for this apparently, so disable Cura's option
