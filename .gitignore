@@ -1,5 +1,7 @@
 .idea*
-Cubifier.egg-info
+CubePostprocessor.egg-info
 build/
 dist/
 __pycache__/
+
+process.log

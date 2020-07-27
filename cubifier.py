@@ -118,14 +118,13 @@ def run_codex(result_file, keep_intermediary = False):
     return 
 
 
-if __name__ == "__main__":
-    debug = False
-
+def main():
     parser = argparse.ArgumentParser(description='Postprocess bfb files for Cube 2')
     parser.add_argument('-k', '--keep', action='store_true', help = 'keep intermediary bfb file')
     parser.add_argument('-d', '--debug', action='store_true', help = 'enable debugging mode')
     parser.add_argument('filename')
     args = parser.parse_args()
+
     if(args.debug):
         print(args)
 
@@ -133,3 +132,7 @@ if __name__ == "__main__":
     pf = print_type(debug=args.debug)
     result_file = pf.process(args.filename)
     run_codex(result_file, args.keep)
+
+
+if __name__ == "__main__":
+    main()
