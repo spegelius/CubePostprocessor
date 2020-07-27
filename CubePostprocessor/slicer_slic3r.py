@@ -1,6 +1,5 @@
-
-from base import SLICER_SLIC3R
-from flavor_makerbot import MakerBotFlavor
+from CubePostprocessor.base import SLICER_SLIC3R
+from CubePostprocessor.flavor_makerbot import MakerBotFlavor
 
 
 class Slic3rPrintFile(MakerBotFlavor):

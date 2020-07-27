@@ -1,8 +1,8 @@
 import logging
 import re
 
-from base import SLICER_SIMPLIFY3D
-from flavor_makerbot import MakerBotFlavor
+from CubePostprocessor.base import SLICER_SIMPLIFY3D
+from CubePostprocessor.flavor_makerbot import MakerBotFlavor
 
 log = logging.getLogger("Cubifier")
 
