@@ -9,6 +9,6 @@ setup(
     packages = ['CubePostprocessor'],
     include_package_data = True,
     entry_points={
-        'console_scripts': ['cubifier = cubifier:main'],
+        'console_scripts': ['cubifier = CubePostprocessor.cubifier:main'],
     }
 )

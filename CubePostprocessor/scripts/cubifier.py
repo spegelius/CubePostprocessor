@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 
 """
 # CubePostprocessor
@@ -36,7 +36,6 @@ from CubePostprocessor.slicer_kisslicer import KissPrintFile
 from CubePostprocessor.slicer_simplify3d import Simplify3dPrintFile
 from CubePostprocessor.slicer_slic3r import Slic3rPrintFile
 from CubePostprocessor import utils
-from CubePostprocessor import CODEX_DIR
 
 fmt = logging.Formatter(fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 filehandler = logging.FileHandler("process.log")
@@ -68,54 +67,71 @@ def detect_file_type(gcode_file):
             log.error("No supported gcode file detected. Is comments enabled on Kisslicer or '; CURA' header added to Cura start.gcode?")
             exit(1)
 
-
-def run_codex(result_file, keep_intermediary = False):
-    # Check for compatable OS
-    if (not utils.is_windows() and not utils.is_wsl()):
-        log.info("OS not supported by CodeX")
-        return    
-
+def run_cube_utils(intermediary_file, keep_intermediary = False):
     # Check to make sure CodeX64.exe was installed properly
-    codex_path = os.path.join(CODEX_DIR, "CodeX64.exe")
-    if not os.path.exists(codex_path):
-        log.info("We tried installing CodeX64.exe in {}, but it is not there".format(codex_path))
-        return
-    log.info("Found CodeX, encoding file. This might take a while...")
-
-    # OS-specific preparation
-    if utils.is_windows():
-        log.info("Detected Windows")
-        win_result_file = result_file
-    elif utils.is_wsl():
-        log.info("Detected WSL")
-
-        # Convert WSL paths to Windows Paths
-        win_result_file = subprocess.check_output(["wslpath", "-w", result_file])
-        try:
-            win_result_file = win_result_file.decode("utf-8")
-        except (UnicodeDecodeError, AttributeError):
-            pass
-        if (win_result_file[-1] == '\n'):
-                win_result_file = win_result_file[:-1]
-    else:
-        log.info("No supported platform detected")
-
-    # Generate .cube paht name
-    _dir, fname = os.path.split(win_result_file)
+    _dir, fname = os.path.split(intermediary_file)
     name, ext = os.path.splitext(fname)
     cube_file = os.path.join(_dir,  name + ".cube")
 
-    codex_args = [codex_path,
-        "CubePro",
-        "EnCode",
-        win_result_file,
+    codex_args = ["cubepro-encoder",
+        intermediary_file,
         cube_file]
     subprocess.call(codex_args)
     log.info("Wrote new file: {}".format(cube_file))
+
     if not keep_intermediary:
-        os.remove(result_file)
-        log.info("Removed intermediatry file: {}".format(result_file))
-    return 
+        os.remove(intermediary_file)
+        log.info("Removed intermediatry file: {}".format(intermediary_file))
+    return
+
+
+# def run_codex(result_file, keep_intermediary = False):
+#     # Check for compatable OS
+#     if (not utils.is_windows() and not utils.is_wsl()):
+#         log.info("OS not supported by CodeX")
+#         return    
+
+#     # Check to make sure CodeX64.exe was installed properly
+#     codex_path = os.path.join(CODEX_DIR, "CodeX64.exe")
+#     if not os.path.exists(codex_path):
+#         log.info("We tried installing CodeX64.exe in {}, but it is not there".format(codex_path))
+#         return
+#     log.info("Found CodeX, encoding file. This might take a while...")
+
+#     # OS-specific preparation
+#     if utils.is_windows():
+#         log.info("Detected Windows")
+#         win_result_file = result_file
+#     elif utils.is_wsl():
+#         log.info("Detected WSL")
+
+#         # Convert WSL paths to Windows Paths
+#         win_result_file = subprocess.check_output(["wslpath", "-w", result_file])
+#         try:
+#             win_result_file = win_result_file.decode("utf-8")
+#         except (UnicodeDecodeError, AttributeError):
+#             pass
+#         if (win_result_file[-1] == '\n'):
+#                 win_result_file = win_result_file[:-1]
+#     else:
+#         log.info("No supported platform detected")
+
+#     # Generate .cube path name
+#     _dir, fname = os.path.split(win_result_file)
+#     name, ext = os.path.splitext(fname)
+#     cube_file = os.path.join(_dir,  name + ".cube")
+
+#     codex_args = [codex_path,
+#         "CubePro",
+#         "EnCode",
+#         win_result_file,
+#         cube_file]
+#     subprocess.call(codex_args)
+#     log.info("Wrote new file: {}".format(cube_file))
+#     if not keep_intermediary:
+#         os.remove(result_file)
+#         log.info("Removed intermediatry file: {}".format(result_file))
+#     return 
 
 
 def main():
@@ -131,7 +147,7 @@ def main():
     print_type = detect_file_type(args.filename)
     pf = print_type(debug=args.debug)
     result_file = pf.process(args.filename)
-    run_codex(result_file, args.keep)
+    run_cube_utils(result_file, args.keep)
 
 
 if __name__ == "__main__":
