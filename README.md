@@ -9,7 +9,24 @@ With Cura
 With Slicer
  - converts Makerware (Makerbot) style g-code to Cube (BfB) format
 Disclaimer: i'm not responsible if anything, good or bad, happens due to use of this script.
-Version 0.8
+
+Version 0.8: No longer relies on the much slower CodeX software.
+
+## Usage
+    cubifier [-h] [-k] [-d] filename
+
+**positional arguments:**
+
+  filename
+
+**optional arguments:**
+
+-h, --help   show this help message and exit
+  
+-k, --keep   keep intermediary bfb file
+  
+-d, --debug  enable debugging mode
+
 
 ## Installation
 
