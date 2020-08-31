@@ -1,7 +1,7 @@
 import logging
 import re
 
-from base import PrintFile, SLICER_CURA
+from CubePostprocessor.base import PrintFile, SLICER_CURA
 
 log = logging.getLogger("Cubifier")
 

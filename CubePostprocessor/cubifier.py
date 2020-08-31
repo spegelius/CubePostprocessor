@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 
 """
 # CubePostprocessor
@@ -26,15 +26,16 @@ Version 0.7
 
 import logging
 import os
+import platform
 import subprocess
 import sys
+import argparse
 
-from slicer_cura import CuraPrintFile
-from slicer_kisslicer import KissPrintFile
-from slicer_simplify3d import Simplify3dPrintFile
-from slicer_slic3r import Slic3rPrintFile
-
-import utils
+from CubePostprocessor.slicer_cura import CuraPrintFile
+from CubePostprocessor.slicer_kisslicer import KissPrintFile
+from CubePostprocessor.slicer_simplify3d import Simplify3dPrintFile
+from CubePostprocessor.slicer_slic3r import Slic3rPrintFile
+from CubePostprocessor import utils
 
 fmt = logging.Formatter(fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 filehandler = logging.FileHandler("process.log")
@@ -66,38 +67,38 @@ def detect_file_type(gcode_file):
             log.error("No supported gcode file detected. Is comments enabled on Kisslicer or '; CURA' header added to Cura start.gcode?")
             exit(1)
 
+def run_cube_utils(intermediary_file, keep_intermediary = False):
+    # Check to make sure CodeX64.exe was installed properly
+    _dir, fname = os.path.split(intermediary_file)
+    name, ext = os.path.splitext(fname)
+    cube_file = os.path.join(_dir,  name + ".cube")
 
-def run_codex(result_file):
+    codex_args = ["cubepro-encoder",
+        intermediary_file,
+        cube_file]
+    subprocess.call(codex_args)
+    log.info("Wrote new file: {}".format(cube_file))
 
-    if utils.is_windows():
-        cur_path = os.path.dirname(os.path.realpath(__file__))
-        print(cur_path)
-        codex_path = os.path.join(cur_path, "CodeX", "CodeX64.exe")
-        if not os.path.exists(codex_path):
-            log.info("Hint: put CodeX to CodeX folder to Cubifier dir, Cubifier calls CodeX automatically")
-            return
+    if not keep_intermediary:
+        os.remove(intermediary_file)
+        log.info("Removed intermediatry file: {}".format(intermediary_file))
+    return
 
-        log.info("Found CodeX, encoding file. This might take a while...")
-        _dir, fname = os.path.split(result_file)
-        name, ext = os.path.splitext(fname)
-        cube_file = os.path.join(_dir,  name + ".cube")
-        args = [codex_path,
-                "CubePro",
-                "EnCode",
-                result_file,
-                cube_file]
-        subprocess.call(args)
+def main():
+    parser = argparse.ArgumentParser(description='Postprocess bfb files for Cube 2')
+    parser.add_argument('-k', '--keep', action='store_true', help = 'keep intermediary bfb file')
+    parser.add_argument('-d', '--debug', action='store_true', help = 'enable debugging mode')
+    parser.add_argument('filename')
+    args = parser.parse_args()
+
+    if(args.debug):
+        print(args)
+
+    print_type = detect_file_type(args.filename)
+    pf = print_type(debug=args.debug)
+    result_file = pf.process(args.filename)
+    run_cube_utils(result_file, args.keep)
 
 
 if __name__ == "__main__":
-    debug = False
-    if len(sys.argv) < 2:
-        log.error("Need argument for file to process")
-        exit(1)
-    if len(sys.argv) == 3 and sys.argv[2] == "--debug":
-        debug = True
-
-    print_type = detect_file_type(sys.argv[1])
-    pf = print_type(debug=debug)
-    result_file = pf.process(sys.argv[1])
-    run_codex(result_file)
+    main()

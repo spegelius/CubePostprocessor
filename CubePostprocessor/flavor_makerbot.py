@@ -2,7 +2,7 @@ import logging
 import re
 import statistics
 
-from base import *
+from CubePostprocessor.base import *
 
 log = logging.getLogger("Cubifier")
 
