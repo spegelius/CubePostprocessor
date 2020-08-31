@@ -5,7 +5,7 @@ With all slicer g-code, it cleans the file after processing (removes comments an
 With KISS
  - allows for solid and infill extrusion amount tuning
 With Cura
- - change first layer temp 10 C higher than rest of the print
+ - changes first layer temp 10 C higher than rest of the print
 With Slicer
  - converts Makerware (Makerbot) style g-code to Cube (BfB) format
 Disclaimer: i'm not responsible if anything, good or bad, happens due to use of this script.
