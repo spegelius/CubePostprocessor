@@ -15,7 +15,7 @@ Version 0.7
 
 ## Installation
 
-###Install cube-utils:
+### Install cube-utils:
 git clone https://github.com/devincody/cube-utils
 cd cube-utils
 make
