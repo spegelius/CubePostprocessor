@@ -10,3 +10,18 @@ With Slicer
  - converts Makerware (Makerbot) style g-code to Cube (BfB) format
 Disclaimer: i'm not responsible if anything, good or bad, happens due to use of this script.
 Version 0.7
+
+
+
+## Installation
+
+###Install cube-utils:
+git clone https://github.com/devincody/cube-utils
+cd cube-utils
+make
+make install
+
+### Install CubePostprocessor:
+git clone https://github.com/devincody/CubePostprocessor
+cd CubePostprocessor
+python setup.py install
